@@ -6,7 +6,9 @@ from django.core.mail import send_mail
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import render
 from django.db import models
+from rest_framework.views import APIView
 from .serializers import (
     RegisterSerializer, LoginSerializer,DepositSerializer,
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,UserProfileSerializer
@@ -19,6 +21,7 @@ import uuid
 import requests
 from django.conf import settings
 from SoftwareManagements.models import Software
+from .utils.email import send_html_email
 # from django.http import FileResponse
 import os
 
@@ -253,3 +256,35 @@ def cryptomus_webhook(request):
         transaction.save()
 
     return Response({"ok": True})
+class ContactView(APIView):
+
+    def post(self, request):
+
+        name = request.data.get("name")
+        email = request.data.get("email")
+        subject = request.data.get("subject")
+        message = request.data.get("message")
+
+        try:
+            send_html_email(
+                subject="New Contact Message",
+                template="emails/contact.html",
+                context={
+                    "name": name,
+                    "email": email,
+                    "subject": subject,
+                    "message": message
+                },
+                to_email="ngogainnocent1@gmail.com"
+            )
+
+            return Response(
+                {"message": "Your message has been sent successfully."},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

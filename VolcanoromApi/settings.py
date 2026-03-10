@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
-
+import ssl
+import certifi
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -143,7 +144,7 @@ AUTH_USER_MODEL = 'accounts.User'
 
 MAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_HOST = "mynextmarket.com"          # Namecheap SMTP server
+EMAIL_HOST = "mail.privateemail.com"          # Namecheap SMTP server
 EMAIL_PORT = 465                          # SSL port
 EMAIL_USE_TLS = False                     # disable TLS
 EMAIL_USE_SSL = True                      # enable SSL for port 465
@@ -152,6 +153,14 @@ EMAIL_HOST_USER = "no-reply@mynextmarket.com"
 EMAIL_HOST_PASSWORD = "Ngoga@1patrick"
 
 DEFAULT_FROM_EMAIL = "Volcanorom <no-reply@mynextmarket.com>"
+# EMAIL_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'housemajorrwanda@gmail.com'
+# EMAIL_HOST_PASSWORD = 'kpxr khxv wjoy hprg'  # NOT your Gmail password!
+# DEFAULT_FROM_EMAIL = 'House Major <housemajorrwanda@gmail.com>'
 CRYPTOMUS_API_KEY = "YOUR_API_KEY"
 CRYPTOMUS_MERCHANT_ID = "YOUR_MERCHANT_ID"
 CRYPTOMUS_URL = "https://api.cryptomus.com/v1/payment"

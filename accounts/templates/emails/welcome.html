@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<style>
+
+body{
+font-family: Arial;
+background:#f4f6f9;
+padding:40px;
+}
+
+.container{
+max-width:600px;
+margin:auto;
+background:white;
+border-radius:10px;
+overflow:hidden;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.header{
+background:#2563eb;
+color:white;
+padding:25px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+}
+
+.content{
+padding:30px;
+color:#333;
+line-height:1.6;
+}
+
+.button{
+display:inline-block;
+padding:12px 24px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:6px;
+margin-top:20px;
+}
+
+.footer{
+padding:20px;
+text-align:center;
+font-size:12px;
+color:#777;
+background:#fafafa;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+Welcome to Volcanorom 🚀
+</div>
+
+<div class="content">
+
+<h2>Hello {{ username }},</h2>
+
+<p>
+Thank you for joining <strong>Volcanorom</strong>.
+You now have access to powerful developer tools and software products.
+</p>
+
+<p>
+Click the button below to access your account.
+</p>
+
+<a class="button" href="{{ login_url }}">
+Go to Dashboard
+</a>
+
+</div>
+
+<div class="footer">
+
+<p>
+© 2026 Volcanorom. All rights reserved.
+</p>
+
+</div>
+
+</div>
+
+</body>
+</html>
