@@ -80,16 +80,16 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'umuzylvc_volcanorom',
-        'USER': 'umuzylvc_admin',
-        'PASSWORD': 'Ngoga@1patrick',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'umuzylvc_volcanorom',
+#         'USER': 'umuzylvc_admin',
+#         'PASSWORD': 'Ngoga@1patrick',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -142,9 +142,9 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 AUTH_USER_MODEL = 'accounts.User'
 
-MAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_HOST = "mail.privateemail.com"          # Namecheap SMTP server
+EMAIL_HOST = "mynextmarket.com"          # Namecheap SMTP server
 EMAIL_PORT = 465                          # SSL port
 EMAIL_USE_TLS = False                     # disable TLS
 EMAIL_USE_SSL = True                      # enable SSL for port 465
@@ -152,8 +152,10 @@ EMAIL_USE_SSL = True                      # enable SSL for port 465
 EMAIL_HOST_USER = "no-reply@mynextmarket.com"
 EMAIL_HOST_PASSWORD = "Ngoga@1patrick"
 
+DEFAULT_FROM_EMAIL = "My Next Market <no-reply@mynextmarket.com>"
+
 DEFAULT_FROM_EMAIL = "Volcanorom <no-reply@mynextmarket.com>"
-# EMAIL_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+EMAIL_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.gmail.com'
 # EMAIL_PORT = 587
@@ -161,9 +163,10 @@ DEFAULT_FROM_EMAIL = "Volcanorom <no-reply@mynextmarket.com>"
 # EMAIL_HOST_USER = 'housemajorrwanda@gmail.com'
 # EMAIL_HOST_PASSWORD = 'kpxr khxv wjoy hprg'  # NOT your Gmail password!
 # DEFAULT_FROM_EMAIL = 'House Major <housemajorrwanda@gmail.com>'
-CRYPTOMUS_API_KEY = "YOUR_API_KEY"
-CRYPTOMUS_MERCHANT_ID = "YOUR_MERCHANT_ID"
+CRYPTOMUS_API_KEY = "44a7GBMnJlITdSLXTuR9Q0JqXiiJZM0IDQj9xT3kQGYaWLEpZsMfcoIwjTVU6uZBrsIrWqB2RF1i7ct5Vn9f8yOjpQcoygEaUG9hizYnDBRdbM0GuIveJaK03f6Hfxnt"
+CRYPTOMUS_MERCHANT_ID = "f451f74b-ab70-44f0-a7ff-6c175c2216b2"
 CRYPTOMUS_URL = "https://api.cryptomus.com/v1/payment"
+CRYPTOMUS_CALLBACK_URL="https://f1fd-2605-59c0-3778-6708-8d86-fd92-2ae0-15c5.ngrok-free.app/api/cryptomus-webhook/"
 # Documentation Settings
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Software Download API',

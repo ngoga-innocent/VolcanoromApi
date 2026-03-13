@@ -18,6 +18,7 @@ class SoftwareSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "type",
             "file",
             "price_in_credits",
             "thumbnail",

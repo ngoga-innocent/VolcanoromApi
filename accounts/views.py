@@ -9,6 +9,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import render
 from django.db import models
 from rest_framework.views import APIView
+from django.db import transaction as db_transaction
+import hashlib
+import base64
+import json
+import requests
 from .serializers import (
     RegisterSerializer, LoginSerializer,DepositSerializer,
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,UserProfileSerializer
@@ -90,7 +95,7 @@ class AuthViewSet(viewsets.ViewSet):
         EmailOTP.objects.create(email=email, otp=otp)
         # send OTP via email
         send_mail(
-            'Password Reset OTP',
+            'VOLCANOROM Password Reset OTP',
             f'Your OTP code is {otp}. It is valid for 10 minutes.',
             settings.EMAIL_HOST_USER,
             [email],
@@ -108,14 +113,19 @@ class AuthViewSet(viewsets.ViewSet):
         try:
             otp_record = EmailOTP.objects.filter(email=email, otp=otp, verified=False).latest('created_at')
         except EmailOTP.DoesNotExist:
-            return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid OTP"}, status=400)
 
         if not otp_record.is_valid():
-            return Response({"error": "OTP expired or already used"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "OTP expired or already used"}, status=400)
 
-        user = User.objects.get(email=email)
+        # Pick the first matching user (or latest if multiple)
+        user = User.objects.filter(email=email).first()
+        if not user:
+            return Response({"error": "User not found"}, status=400)
+
         user.set_password(new_password)
         user.save()
+
         otp_record.verified = True
         otp_record.save()
 
@@ -170,23 +180,52 @@ class WalletViewSet(viewsets.ViewSet):
         if not amount:
             return Response({"error": "Amount required"}, status=400)
 
+        try:
+            amount = float(amount)
+            if amount <= 0:
+                raise ValueError
+        except ValueError:
+            return Response({"error": "Invalid amount"}, status=400)
+
         order_id = str(uuid.uuid4())
 
         payload = {
             "amount": str(amount),
             "currency": "USD",
             "order_id": order_id,
-            "url_return": "http://localhost:5173/wallet",
-            "url_callback": "http://localhost:8000/api/wallet/cryptomus-webhook/",
+            "url_return": "https://volcanorom.com",
+            "url_callback": settings.CRYPTOMUS_CALLBACK_URL,
         }
+
+        payload_json = json.dumps(payload, separators=(',', ':'), ensure_ascii=False)
+
+        sign = hashlib.md5(
+            base64.b64encode(payload_json.encode()) +
+            settings.CRYPTOMUS_API_KEY.encode()
+        ).hexdigest()
 
         headers = {
             "merchant": settings.CRYPTOMUS_MERCHANT_ID,
-            "sign": settings.CRYPTOMUS_API_KEY,
+            "sign": sign,
+            "Content-Type": "application/json"
         }
 
-        response = requests.post(settings.CRYPTOMUS_URL, json=payload, headers=headers)
+        response = requests.post(
+            settings.CRYPTOMUS_URL,
+            data=payload_json,
+            headers=headers,
+            timeout=30
+        )
+
+        print(response.text)
+
+        if response.status_code != 200:
+            return Response({"error": response.text}, status=500)
+
         data = response.json()
+
+        if not data.get("result"):
+            return Response({"error": "Payment creation failed"}, status=400)
 
         WalletTransaction.objects.create(
             user=request.user,
@@ -194,11 +233,12 @@ class WalletViewSet(viewsets.ViewSet):
             type="crypto",
             status="pending",
             reference=order_id,
+            # gateway_id=data["result"]["uuid"]
         )
 
         return Response({
-            "payment_url": data["result"]["url"]
-        })
+        "payment_url": data["result"]["url"]
+    })
     @action(detail=False, methods=['POST'])
     def checkdownload(self, request):
         user = request.user
@@ -243,19 +283,63 @@ class WalletViewSet(viewsets.ViewSet):
 @permission_classes([AllowAny])
 def cryptomus_webhook(request):
 
-    order_id = request.data.get("order_id")
-    payment_status = request.data.get("status")
+    data = request.data
+    received_sign = request.headers.get("sign")
+
+    if not received_sign:
+        return Response({"error": "Missing signature"}, status=400)
+
+    payload = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
+
+    generated_sign = hashlib.md5(
+        base64.b64encode(payload.encode()) +
+        settings.CRYPTOMUS_API_KEY.encode()
+    ).hexdigest()
+
+    if generated_sign != received_sign:
+        return Response({"error": "Invalid signature"}, status=400)
+
+    order_id = data.get("order_id")
+    payment_status = data.get("status")
+    payment_uuid = data.get("uuid")
+
+    if not order_id:
+        return Response({"error": "Missing order_id"}, status=400)
 
     try:
         transaction = WalletTransaction.objects.get(reference=order_id)
     except WalletTransaction.DoesNotExist:
         return Response(status=404)
 
-    if payment_status == "paid":
-        transaction.status = "completed"
-        transaction.save()
+    if payment_status in ["paid", "paid_over"] and transaction.status != "completed":
+
+        with db_transaction.atomic():
+            transaction.status = "completed"
+            transaction.gateway_id = payment_uuid
+            transaction.save()
+
+            user = transaction.user
+            user.balance += transaction.amount
+            user.save()
 
     return Response({"ok": True})
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def check_payment(request):
+
+    order_id = request.GET.get("order_id")
+
+    try:
+        tx = WalletTransaction.objects.get(
+            reference=order_id,
+            user=request.user
+        )
+    except WalletTransaction.DoesNotExist:
+        return Response({"status": "failed"})
+
+    return Response({
+        "status": tx.status
+    })
 class ContactView(APIView):
 
     def post(self, request):
@@ -288,3 +372,32 @@ class ContactView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+@api_view(["POST"])
+def p2p_price(request):
+
+    fiat = request.data.get("fiat", "USD")
+
+    payload = {
+        "asset": "USDT",
+        "fiat": fiat,
+        "tradeType": "SELL",
+        "page": 1,
+        "rows": 5
+    }
+
+    res = requests.post(
+        "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search",
+        json=payload,
+        timeout=30
+    )
+
+    data = res.json()
+
+    if not data.get("data"):
+        return Response({"error": "No offers found"}, status=400)
+
+    price = float(data["data"][0]["adv"]["price"])
+
+    return Response({
+        "price": price
+    })

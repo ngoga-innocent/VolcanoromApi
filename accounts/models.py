@@ -1,12 +1,13 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from phonenumber_field.modelfields import PhoneNumberField  # optional
+# from phonenumber_field.modelfields import PhoneNumberField  # optional
 from django.conf import settings
 import random
 from django.utils import timezone
 from datetime import timedelta
+
 class User(AbstractUser):
-    phone_number = PhoneNumberField(null=True, blank=True)
+    phone_number = models.CharField(null=True,blank=True,max_length=255)
 
     def __str__(self):
         return self.username
