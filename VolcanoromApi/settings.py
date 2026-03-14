@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import ssl
 import certifi
+from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -74,22 +75,26 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'umuzylvc_volcanorom',
-#         'USER': 'umuzylvc_admin',
-#         'PASSWORD': 'Ngoga@1patrick',
-#         'HOST': 'localhost',
-#         'PORT': '3306',
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'umuzylvc_volcanorom',
+        'USER': 'umuzylvc_admin',
+        'PASSWORD': 'Ngoga@1patrick',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
+}
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=5)
+    }
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -166,7 +171,7 @@ EMAIL_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 CRYPTOMUS_API_KEY = "44a7GBMnJlITdSLXTuR9Q0JqXiiJZM0IDQj9xT3kQGYaWLEpZsMfcoIwjTVU6uZBrsIrWqB2RF1i7ct5Vn9f8yOjpQcoygEaUG9hizYnDBRdbM0GuIveJaK03f6Hfxnt"
 CRYPTOMUS_MERCHANT_ID = "f451f74b-ab70-44f0-a7ff-6c175c2216b2"
 CRYPTOMUS_URL = "https://api.cryptomus.com/v1/payment"
-CRYPTOMUS_CALLBACK_URL="https://f1fd-2605-59c0-3778-6708-8d86-fd92-2ae0-15c5.ngrok-free.app/api/cryptomus-webhook/"
+CRYPTOMUS_CALLBACK_URL="https://api.volcanorom.com/api/cryptomus-webhook/"
 # Documentation Settings
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Software Download API',

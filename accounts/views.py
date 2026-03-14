@@ -191,10 +191,14 @@ class WalletViewSet(viewsets.ViewSet):
 
         payload = {
             "amount": str(amount),
-            "currency": "USD",
+            "currency": "USDT",
             "order_id": order_id,
             "url_return": "https://volcanorom.com",
             "url_callback": settings.CRYPTOMUS_CALLBACK_URL,
+            "lifetime":300,
+            "url_return":'https://volcanorom.com/deposit',
+            "url_success":'https://volcanorom.com/',
+            "is_payment_multiple":True
         }
 
         payload_json = json.dumps(payload, separators=(',', ':'), ensure_ascii=False)
@@ -214,7 +218,8 @@ class WalletViewSet(viewsets.ViewSet):
             settings.CRYPTOMUS_URL,
             data=payload_json,
             headers=headers,
-            timeout=30
+            timeout=30,
+          
         )
 
         print(response.text)
@@ -375,7 +380,7 @@ class ContactView(APIView):
 @api_view(["POST"])
 def p2p_price(request):
 
-    fiat = request.data.get("fiat", "USD")
+    fiat = request.data.get("fiat", "USDT")
 
     payload = {
         "asset": "USDT",

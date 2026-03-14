@@ -28,7 +28,9 @@ class User(AbstractUser):
 
 class WalletTransaction(models.Model):
     TRANSACTION_TYPE = (
-        ('manual', 'Manual Payment'),
+        ('manual_lumicash', 'Manual Payment'),
+        ('manual_mpesa', 'Manual MPesa Payment'),
+        ('manual_safaricom', 'Manual SafariCom Payment'),
         ('crypto', 'Crypto Payment'),
         ('deduction', 'Tool Download Deduction'),
     )

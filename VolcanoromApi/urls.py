@@ -22,7 +22,7 @@ urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     path('dashboard/',include("AdminDashboard.urls")),
-    path('software/',include("SoftwareManagements.urls")),
+    path('softwares/',include("SoftwareManagements.urls")),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
 
     # Swagger UI

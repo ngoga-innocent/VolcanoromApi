@@ -52,7 +52,7 @@ class DepositSerializer(serializers.ModelSerializer):
         if data["amount"] <= 0:
             raise serializers.ValidationError("Invalid amount")
 
-        if data["type"] not in ["manual", "crypto"]:
+        if data["type"] not in ["manual_lumicash","manual_mpesa","manual_safaricom", "crypto"]:
             raise serializers.ValidationError("Invalid deposit type")
 
         return data
@@ -61,6 +61,13 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model=WalletTransaction
         fields=('id','amount','user','type','status','proof','reference','created_at')
+        def get_proof(self, obj):
+            request = self.context.get("request")
+
+            if obj.proof:
+                return request.build_absolute_uri(obj.proof.url)
+
+            return None
 class UserSerializer(serializers.ModelSerializer):
     balance = serializers.SerializerMethodField()
     class Meta:
