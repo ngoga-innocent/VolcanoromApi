@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import WalletTransaction
+from .models import WalletTransaction,HeroCarousel
 User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -75,3 +75,32 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email', 'phone_number', 'balance','is_staff','is_superuser','first_name','last_name')
     def get_balance(self, obj):
         return obj.balance  # dynamic balance from WalletTransaction
+class HeroCarouselSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HeroCarousel
+        fields = "__all__"
+class AdminUserSerializer(serializers.ModelSerializer):
+    balance = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'phone_number', 'balance','is_staff','is_superuser','first_name','last_name','password')
+        read_only_fields = ('id', 'balance')
+
+    def get_balance(self, obj):
+        return obj.balance  # dynamic balance from WalletTransaction
+    def create(self, validated_data):
+        password = validated_data.pop("password")
+        user = User(**validated_data)
+        user.set_password(password)  # hash the password properly
+        user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance

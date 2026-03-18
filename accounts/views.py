@@ -13,6 +13,9 @@ from django.db import transaction as db_transaction
 import hashlib
 import base64
 import json
+from rest_framework import generics, permissions
+from .models import HeroCarousel
+from .serializers import HeroCarouselSerializer
 import requests
 from .serializers import (
     RegisterSerializer, LoginSerializer,DepositSerializer,
@@ -406,3 +409,22 @@ def p2p_price(request):
     return Response({
         "price": price
     })
+# PUBLIC (frontend uses this)
+class ActiveHeroCarouselView(generics.ListAPIView):
+    serializer_class = HeroCarouselSerializer
+
+    def get_queryset(self):
+        return HeroCarousel.objects.filter(is_active=True).order_by("order")
+
+
+# ADMIN CRUD
+class HeroCarouselListCreateView(generics.ListCreateAPIView):
+    queryset = HeroCarousel.objects.all().order_by("order")
+    serializer_class = HeroCarouselSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class HeroCarouselDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = HeroCarousel.objects.all()
+    serializer_class = HeroCarouselSerializer
+    permission_classes = [permissions.IsAdminUser]

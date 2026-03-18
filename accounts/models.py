@@ -67,3 +67,16 @@ class EmailOTP(models.Model):
     @staticmethod
     def generate_otp():
         return str(random.randint(100000, 999999))
+class HeroCarousel(models.Model):
+    title = models.CharField(max_length=255, blank=True, null=True)
+    subtitle = models.TextField(blank=True, null=True)
+
+    image = models.ImageField(upload_to="hero_carousel/")
+    is_active = models.BooleanField(default=True)
+
+    order = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Slide {self.id}"

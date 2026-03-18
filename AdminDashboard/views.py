@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from accounts.models import WalletTransaction, User
-from accounts.serializers import WalletTransactionSerializer, UserSerializer
+from accounts.serializers import WalletTransactionSerializer, UserSerializer,AdminUserSerializer
 
 
 class AdminViewSet(viewsets.ViewSet):
@@ -34,7 +34,7 @@ class AdminViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["post"])
     def create_user(self, request):
-        serializer = UserSerializer(data=request.data)
+        serializer = AdminUserSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save()
@@ -106,9 +106,9 @@ class AdminViewSet(viewsets.ViewSet):
             tx.save()
 
             # credit user wallet
-            wallet = tx.user.wallet
-            wallet.balance += tx.amount
-            wallet.save()
+            # wallet = tx.user.wallet
+            # wallet.balance += tx.amount
+            # wallet.save()
 
             return Response({"message": "Deposit approved"})
 

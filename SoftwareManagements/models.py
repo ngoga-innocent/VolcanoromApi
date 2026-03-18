@@ -8,11 +8,18 @@ class Category(models.Model):
 class Software(models.Model):
 
     SOFTWARE_TYPES = (
-        ('mdm_files', 'MDM Files'),
-        ('tools', 'Tools'),
+        ("mdm_files", "MDM Files"),
+        ("tools", "Tools"),
+    )
+
+    SERVICE_TYPES = (
+        ("imei", "IMEI Service"),
+        ("server", "Server Service"),
+        ("remote", "Remote Service"),
     )
 
     name = models.CharField(max_length=255)
+
     description = models.TextField()
 
     type = models.CharField(
@@ -22,15 +29,38 @@ class Software(models.Model):
 
     price_in_credits = models.PositiveIntegerField()
 
-    thumbnail = models.ImageField(upload_to="software/thumbnails/")
-
-    # durations offered
-    duration_options = models.JSONField(
-        default=list,
-        help_text="Example: ['1 Month','3 Months','6 Months']"
+    thumbnail = models.ImageField(
+        upload_to="software/thumbnails/"
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    # TOOL ONLY
+    duration = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True
+    )
+
+    service = models.CharField(
+        max_length=50,
+        choices=SERVICE_TYPES,
+        blank=True,
+        null=True
+    )
+
+    client_fields = models.JSONField(
+    default=list,
+    blank=True,
+    help_text='Example: [{"name": "IMEI", "type": "text"}, {"name": "Screenshot", "type": "image"}]')
+
+    # MDM FILE ONLY
+    download_link = models.URLField(
+        blank=True,
+        null=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
     uploaded_by = models.ForeignKey(
         User,
@@ -46,14 +76,15 @@ class Order(models.Model):
         ("completed", "Completed"),
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
 
     software = models.ForeignKey(
         Software,
         on_delete=models.CASCADE
     )
-
-    duration = models.CharField(max_length=50)
 
     price_paid = models.PositiveIntegerField()
 
@@ -61,6 +92,12 @@ class Order(models.Model):
         max_length=20,
         choices=STATUS_CHOICES,
         default="pending"
+    )
+
+    # CLIENT SUBMITTED DATA
+    client_data = models.JSONField(
+        default=dict,
+        blank=True
     )
 
     # ADMIN RESPONSE
@@ -79,12 +116,32 @@ class Order(models.Model):
         null=True
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
     completed_at = models.DateTimeField(
         null=True,
         blank=True
     )
+
+    def __str__(self):
+        return f"{self.user} - {self.software.name}"
+class OrderClientFile(models.Model):
+    order = models.ForeignKey(
+        Order,
+        related_name="files",
+        on_delete=models.CASCADE
+    )
+
+    field_name = models.CharField(max_length=255)
+
+    file = models.ImageField(upload_to="orders/client_files/")
+
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Order {self.order.id} - {self.field_name}"
 class SoftwareImage(models.Model):
 
     software = models.ForeignKey(
