@@ -30,6 +30,7 @@ import requests
 from django.conf import settings
 from SoftwareManagements.models import Software
 from .utils.email import send_html_email
+from .serializers import WalletTransactionSerializer
 # from django.http import FileResponse
 import os
 
@@ -149,6 +150,18 @@ class AuthViewSet(viewsets.ViewSet):
 # Wallet View Set
 class WalletViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
+    @action(detail=False, methods=["get"])
+    def transactions(self, request):
+        user=request.user
+        txs = WalletTransaction.objects.filter(user=user).order_by("-created_at")
+
+        serializer = WalletTransactionSerializer(
+            txs,
+            many=True,
+            context={"request": request}
+        )
+
+        return Response(serializer.data)
 
     # -----------------------------
     # MANUAL DEPOSIT
