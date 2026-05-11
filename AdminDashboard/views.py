@@ -5,7 +5,12 @@ from rest_framework.response import Response
 
 from accounts.models import WalletTransaction, User
 from accounts.serializers import WalletTransactionSerializer, UserSerializer,AdminUserSerializer
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
+
+from .models import Announcement
+from .serializers import AnnouncementSerializer
 
 class AdminViewSet(viewsets.ViewSet):
 
@@ -139,3 +144,20 @@ class AdminViewSet(viewsets.ViewSet):
 
         except WalletTransaction.DoesNotExist:
             return Response({"error": "Transaction not found"}, status=404)
+
+
+class AnnouncementViewSet(ModelViewSet):
+    queryset = Announcement.objects.all().order_by("-created_at")
+    serializer_class = AnnouncementSerializer
+
+    @action(detail=False, methods=["get"])
+    def active(self, request):
+        announcement = Announcement.objects.filter(
+            is_active=True
+        ).first()
+
+        if not announcement:
+            return Response(None)
+
+        serializer = self.get_serializer(announcement)
+        return Response(serializer.data)

@@ -52,7 +52,7 @@ class DepositSerializer(serializers.ModelSerializer):
         if data["amount"] <= 0:
             raise serializers.ValidationError("Invalid amount")
 
-        if data["type"] not in ["manual_lumicash","manual_mpesa","manual_safaricom", "crypto"]:
+        if data["type"] not in ["manual_lumicash","manual_mpesa","manual_safaricom","manual_Bancobu", "crypto"]:
             raise serializers.ValidationError("Invalid deposit type")
 
         return data

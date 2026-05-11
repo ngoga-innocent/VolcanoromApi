@@ -31,6 +31,7 @@ class WalletTransaction(models.Model):
         ('manual_lumicash', 'Manual Payment'),
         ('manual_mpesa', 'Manual MPesa Payment'),
         ('manual_safaricom', 'Manual SafariCom Payment'),
+        ('manual_Bancobu','Manual Bancobu Enoti'),
         ('crypto', 'Crypto Payment'),
         ('deduction', 'Tool Download Deduction'),
     )

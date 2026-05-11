@@ -114,7 +114,7 @@ class OrderViewSet(ModelViewSet):
         # 🔥 Parse dynamic fields
         for field in client_fields:
 
-            name = field.get("name")
+            name = field.get("name").strip()
             field_type = field.get("type")
 
             if field_type == "text":
