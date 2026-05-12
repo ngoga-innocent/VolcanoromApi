@@ -7,11 +7,23 @@ from accounts.models import WalletTransaction, User
 from accounts.serializers import WalletTransactionSerializer, UserSerializer,AdminUserSerializer
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-
+from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 from .models import Announcement
 from .serializers import AnnouncementSerializer
 
+class IsStaffOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        # Allow everyone to read
+        if request.method in SAFE_METHODS:
+            return True
+
+        # Only staff can create/update/delete
+        return (
+            request.user
+            and request.user.is_authenticated
+            and request.user.is_staff
+        )
 class AdminViewSet(viewsets.ViewSet):
 
     permission_classes = [IsAdminUser]
@@ -149,7 +161,27 @@ class AdminViewSet(viewsets.ViewSet):
 class AnnouncementViewSet(ModelViewSet):
     queryset = Announcement.objects.all().order_by("-created_at")
     serializer_class = AnnouncementSerializer
+    permission_classes = [IsStaffOrReadOnly]
 
+    def perform_create(self, serializer):
+        # Deactivate all current active announcements
+        Announcement.objects.filter(is_active=True).update(
+            is_active=False
+        )
+
+        # Save new one as active
+        serializer.save(is_active=True)
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+
+        # If updating this announcement to active
+        if self.request.data.get("is_active") in [True, "true", "True", "1"]:
+            Announcement.objects.exclude(id=instance.id).filter(
+                is_active=True
+            ).update(is_active=False)
+
+        serializer.save()
     @action(detail=False, methods=["get"])
     def active(self, request):
         announcement = Announcement.objects.filter(

@@ -71,7 +71,9 @@ WSGI_APPLICATION = 'VolcanoromApi.wsgi.application'
 #     "http://localhost:5173",
 # ]
 CORS_ALLOW_ALL_ORIGINS = True
-
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 

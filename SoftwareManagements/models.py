@@ -18,7 +18,12 @@ class Software(models.Model):
         ("server", "Server Service"),
         ("remote", "Remote Service"),
     )
-
+    MDM_CATEGORIES = (
+        ("transsion", "Transsion Devices"),
+        ("samsung", "Samsung Mobile"),
+        ("hmd", "HMD"),
+        ("onfone", "Onfone Mobile"),
+    )
     name = models.CharField(max_length=255)
 
     description = models.TextField()
@@ -26,6 +31,12 @@ class Software(models.Model):
     type = models.CharField(
         max_length=20,
         choices=SOFTWARE_TYPES
+    )
+    mdm_category = models.CharField(
+        max_length=50,
+        choices=MDM_CATEGORIES,
+        blank=True,
+        null=True
     )
 
     price_in_credits = models.PositiveIntegerField()

@@ -16,7 +16,7 @@ class User(AbstractUser):
     def balance(self):
         # from .wallet import WalletTransaction  # import here to avoid circular import
         total_in = WalletTransaction.objects.filter(
-            user=self, type__in=['manual', 'crypto'], status__in=['approved','completed']
+            user=self, type__in=['manual', 'crypto','manual_lumicash','manual_mpesa','manual_safaricom','manual_Bancobu','admin_credit'], status__in=['approved','completed']
         ).aggregate(models.Sum('amount'))['amount__sum'] or 0
 
         total_out = WalletTransaction.objects.filter(
@@ -34,6 +34,7 @@ class WalletTransaction(models.Model):
         ('manual_Bancobu','Manual Bancobu Enoti'),
         ('crypto', 'Crypto Payment'),
         ('deduction', 'Tool Download Deduction'),
+        ('admin_credit', 'Admin Credit'),
     )
 
     STATUS_CHOICES = (
@@ -81,3 +82,4 @@ class HeroCarousel(models.Model):
 
     def __str__(self):
         return f"Slide {self.id}"
+    

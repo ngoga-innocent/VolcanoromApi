@@ -1,5 +1,5 @@
 from rest_framework.routers import DefaultRouter
-from .views import AuthViewSet,WalletViewSet,ContactView,p2p_price,check_payment,cryptomus_webhook
+from .views import AuthViewSet,WalletViewSet,ContactView,p2p_price,check_payment,cryptomus_webhook,AdminDepositView
 from .views import *
 from django.urls import path
 router = DefaultRouter()
@@ -17,5 +17,10 @@ urlpatterns+=[
     # ADMIN
     path("admin/hero-carousel/", HeroCarouselListCreateView.as_view()),
     path("admin/hero-carousel/<int:pk>/", HeroCarouselDetailView.as_view()),
+     path(
+        "wallet/admin-deposit/",
+        AdminDepositView.as_view(),
+        # name="admin-deposit",
+    ),
     
 ]

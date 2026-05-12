@@ -104,3 +104,27 @@ class AdminUserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+class AdminDepositSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    amount = serializers.DecimalField(max_digits=20, decimal_places=2)
+    reference = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Amount must be greater than 0"
+            )
+        return value
+
+    def create(self, validated_data):
+        user = User.objects.get(id=validated_data["user_id"])
+
+        transaction = WalletTransaction.objects.create(
+            user=user,
+            amount=validated_data["amount"],
+            type="admin_credit",
+            status="completed",
+            reference=validated_data.get("reference", ""),
+        )
+
+        return transaction

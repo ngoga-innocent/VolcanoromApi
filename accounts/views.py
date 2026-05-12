@@ -19,7 +19,7 @@ from .serializers import HeroCarouselSerializer
 import requests
 from .serializers import (
     RegisterSerializer, LoginSerializer,DepositSerializer,
-    PasswordResetRequestSerializer, PasswordResetConfirmSerializer,UserProfileSerializer
+    PasswordResetRequestSerializer, PasswordResetConfirmSerializer,UserProfileSerializer,AdminDepositSerializer
 )
 from django.contrib.auth import get_user_model
 from .models import EmailOTP,WalletTransaction
@@ -361,6 +361,25 @@ def check_payment(request):
     return Response({
         "status": tx.status
     })
+class AdminDepositView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request):
+        serializer = AdminDepositSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        transaction = serializer.save()
+
+        return Response(
+            {
+                "message": "Wallet funded successfully",
+                "transaction_id": transaction.id,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 class ContactView(APIView):
 
     def post(self, request):
