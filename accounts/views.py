@@ -323,6 +323,24 @@ class AuthViewSet(viewsets.ViewSet):
                 {"error": "Failed to verify MFA. Please try again."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    def disable_mfa(self, request):
+        user = request.user
+
+        try:
+            user.mfa_enabled = False
+            user.otp_secret = None
+            user.save()
+
+            return Response({"message": "MFA disabled successfully"})
+
+        except Exception as e:
+            logger.error(f"MFA disable failed for user {user.id}: {str(e)}")
+
+            return Response(
+                {"error": "Failed to disable MFA. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 # Wallet View Set
 class WalletViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]

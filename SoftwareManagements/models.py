@@ -9,7 +9,7 @@ class Software(models.Model):
 
     SOFTWARE_TYPES = (
         ("mdm_files", "MDM Files"),
-        ("tools", "Tools"),
+        ("c", "Tools"),
         ("services","Services")
     )
 
