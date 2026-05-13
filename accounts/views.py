@@ -6,13 +6,18 @@ from django.core.mail import send_mail
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import render
+# from django.shortcuts import render
 from django.db import models
 from rest_framework.views import APIView
 from django.db import transaction as db_transaction
 import hashlib
 import base64
+import random
 import json
+from django.utils import timezone
+from rest_framework.permissions import IsAdminUser
+from datetime import timedelta
+from django.core.mail import send_mail
 from rest_framework import generics, permissions
 from .models import HeroCarousel
 from .serializers import HeroCarouselSerializer
@@ -31,9 +36,15 @@ from django.conf import settings
 from SoftwareManagements.models import Software
 from .utils.email import send_html_email
 from .serializers import WalletTransactionSerializer
+import pyotp
+import qrcode
+import base64
+import logging
+from io import BytesIO
+
 # from django.http import FileResponse
 import os
-
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 class AuthViewSet(viewsets.ViewSet):
@@ -147,6 +158,171 @@ class AuthViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    def setup_mfa(self, request):
+        user = request.user
+
+        try:
+            # 🔐 Prevent re-enabling if already active
+            if user.mfa_enabled:
+                return Response(
+                    {"error": "MFA already enabled"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Generate secret
+            secret = pyotp.random_base32()
+            user.otp_secret = secret
+            user.save()
+
+            # Create provisioning URI
+            totp = pyotp.TOTP(secret)
+            uri = totp.provisioning_uri(
+                name=user.email or user.username,
+                issuer_name="VOLCANOROM"
+            )
+
+            # Generate QR code
+            qr = qrcode.make(uri)
+            buffer = BytesIO()
+            qr.save(buffer, format="PNG")
+            qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+            return Response({
+                "qr_code": f"data:image/png;base64,{qr_base64}",
+                "secret": secret  # optional
+            })
+
+        except Exception as e:
+            # 🔥 Log full error for debugging
+            logger.error(f"MFA setup failed for user {user.id}: {str(e)}")
+
+            return Response(
+                {"error": "Failed to initialize MFA. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    def send_email_otp(self, request):
+        user = request.user
+
+        try:
+            otp = str(random.randint(100000, 999999))
+
+            user.email_otp = otp
+            user.email_otp_expires = timezone.now() + timedelta(minutes=5)
+            user.save()
+
+            send_mail(
+                subject="VOLCANOROM Verification Code",
+                message=f"""
+                Your verification code is:
+
+                {otp}
+
+                This code expires in 5 minutes.
+                            """,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
+            return Response({
+                "message": "OTP sent successfully"
+            })
+
+        except Exception as e:
+            logger.error(f"Email OTP failed for user {user.id}: {str(e)}")
+
+            return Response(
+                {"error": "Failed to send OTP"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    def verify_email_backup(self, request):
+        user = request.user
+        otp = request.data.get("otp")
+
+        try:
+            if not otp:
+                return Response(
+                    {"error": "OTP is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if not user.email_otp:
+                return Response(
+                    {"error": "No OTP requested"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if timezone.now() > user.email_otp_expires:
+                return Response(
+                    {"error": "OTP expired"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if user.email_otp != otp:
+                return Response(
+                    {"error": "Invalid OTP"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # CLEAR OTP
+            user.email_otp = None
+            user.email_otp_expires = None
+            user.save()
+
+            return Response({
+                "message": "Email verification successful"
+            })
+
+        except Exception as e:
+            logger.error(f"Email backup MFA failed for user {user.id}: {str(e)}")
+
+            return Response(
+                {"error": "Verification failed"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    def verify_mfa(self, request):
+        user = request.user
+
+        try:
+            otp = request.data.get("otp")
+            print(otp)
+            # 🔐 Validate OTP presence
+            if not otp:
+                return Response(
+                    {"error": "OTP is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 🔐 Ensure MFA setup started
+            
+
+            # 🔐 Verify OTP (allow small time drift)
+            totp = pyotp.TOTP(user.otp_secret)
+            print(totp.now())
+            if not totp.verify(otp, valid_window=1):
+                return Response(
+                    {"error": "Invalid or expired OTP"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # ✅ Enable MFA
+            if not user.mfa_enabled:
+                user.mfa_enabled = True
+                user.save()
+
+            return Response({"message": "MFA enabled successfully"})
+
+        except Exception as e:
+            logger.error(f"MFA verification failed for user {user.id}: {str(e)}")
+
+            return Response(
+                {"error": "Failed to verify MFA. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 # Wallet View Set
 class WalletViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -175,7 +351,7 @@ class WalletViewSet(viewsets.ViewSet):
         transaction = WalletTransaction.objects.create(
             user=request.user,
             amount=serializer.validated_data["amount"],
-            type="manual",
+            type=serializer.validated_data["type"],
             proof=serializer.validated_data.get("proof"),
             status="pending",
             reference=str(uuid.uuid4())
@@ -299,6 +475,7 @@ class WalletViewSet(viewsets.ViewSet):
                 {"message": "This software is no longer available"},
                 status=404
             )
+    
 
 @api_view(["POST"])
 @permission_classes([AllowAny])

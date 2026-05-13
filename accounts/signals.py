@@ -7,6 +7,7 @@ from django.utils.timezone import now
 @receiver(post_save, sender=WalletTransaction)
 def send_transaction_email(sender, instance, created, **kwargs):
     # Only send email on update, not creation
+    
     if not created:
         subject = f"Your wallet transaction #{instance.reference} has been updated"
         template = "emails/transaction_email_template.html"

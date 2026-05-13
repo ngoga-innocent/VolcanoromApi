@@ -8,7 +8,10 @@ from datetime import timedelta
 
 class User(AbstractUser):
     phone_number = models.CharField(null=True,blank=True,max_length=255)
-
+    mfa_enabled = models.BooleanField(default=False)
+    otp_secret = models.CharField(max_length=32, blank=True, null=True)
+    email_otp = models.CharField(max_length=6, blank=True, null=True)
+    email_otp_expires = models.DateTimeField(null=True, blank=True)
     def __str__(self):
         return self.username
 
@@ -55,7 +58,8 @@ class WalletTransaction(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.type} - {self.amount}"
-
+    class Meta:
+        ordering = ['-created_at']  # newest first
 
 class EmailOTP(models.Model):
     email = models.EmailField()

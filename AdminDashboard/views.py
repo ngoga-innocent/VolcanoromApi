@@ -8,7 +8,8 @@ from accounts.serializers import WalletTransactionSerializer, UserSerializer,Adm
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.permissions import SAFE_METHODS, BasePermission
-
+from django.shortcuts import get_object_or_404
+from accounts.serializers import WalletTransactionUpdateSerializer
 from .models import Announcement
 from .serializers import AnnouncementSerializer
 
@@ -116,8 +117,8 @@ class AdminViewSet(viewsets.ViewSet):
             if not tx.type.startswith("manual"):
                 return Response({"error": "Not a manual transaction"}, status=400)
 
-            if tx.status != "pending":
-                return Response({"error": "Transaction already processed"}, status=400)
+            # if tx.status != "pending":
+            #     return Response({"error": "Transaction already processed"}, status=400)
 
             tx.status = "completed"
             tx.save()
@@ -146,8 +147,8 @@ class AdminViewSet(viewsets.ViewSet):
             if not tx.type.startswith("manual"):
                 return Response({"error": "Not a manual transaction"}, status=400)
 
-            if tx.status != "pending":
-                return Response({"error": "Transaction already processed"}, status=400)
+            # if tx.status != "pending":
+            #     return Response({"error": "Transaction already processed"}, status=400)
 
             tx.status = "rejected"
             tx.save()
@@ -156,7 +157,27 @@ class AdminViewSet(viewsets.ViewSet):
 
         except WalletTransaction.DoesNotExist:
             return Response({"error": "Transaction not found"}, status=404)
+    @action(detail=True, methods=["patch"],permission_classes=[IsAdminUser])
+    def update_transaction(self, request, pk=None):
 
+        transaction = get_object_or_404(
+            WalletTransaction,
+            pk=pk
+        )
+
+        serializer = WalletTransactionUpdateSerializer(
+            transaction,
+            data=request.data,
+            partial=True
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "message": "Transaction updated successfully",
+            "data": serializer.data
+        })
 
 class AnnouncementViewSet(ModelViewSet):
     queryset = Announcement.objects.all().order_by("-created_at")

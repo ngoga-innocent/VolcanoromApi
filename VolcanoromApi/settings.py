@@ -159,7 +159,7 @@ EMAIL_USE_SSL = True                      # enable SSL for port 465
 EMAIL_HOST_USER = "no-reply@mynextmarket.com"
 EMAIL_HOST_PASSWORD = "Ngoga@1patrick"
 
-DEFAULT_FROM_EMAIL = "My Next Market <no-reply@mynextmarket.com>"
+# DEFAULT_FROM_EMAIL = "My Next Market <no-reply@mynextmarket.com>"
 
 DEFAULT_FROM_EMAIL = "Volcanorom <no-reply@mynextmarket.com>"
 EMAIL_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())

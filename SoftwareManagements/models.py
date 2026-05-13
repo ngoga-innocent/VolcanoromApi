@@ -81,6 +81,8 @@ class Software(models.Model):
 
     def __str__(self):
         return self.name
+    class Meta:
+        ordering = ['-created_at']  # newest first
 class Order(models.Model):
 
     STATUS_CHOICES = (
@@ -139,6 +141,8 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.software.name}"
+    class Meta:
+        ordering = ['-created_at']  # newest first
 class OrderClientFile(models.Model):
     order = models.ForeignKey(
         Order,

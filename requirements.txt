@@ -17,10 +17,13 @@ phonenumbers==9.0.25
 pillow==12.1.1
 PyJWT==2.11.0
 PyMySQL==1.1.2
+pyotp==2.9.0
 PyYAML==6.0.3
+qrcode==8.2
 referencing==0.37.0
 requests==2.32.5
 rpds-py==0.30.0
 sqlparse==0.5.5
 uritemplate==4.2.0
 urllib3==2.6.3
+whitenoise==6.12.0

@@ -37,7 +37,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'phone_number', 'balance','is_staff','is_superuser','first_name','last_name')
+        fields = ('id', 'username', 'email', 'phone_number', 'balance','is_staff','is_superuser','first_name','last_name','mfa_enabled')
         read_only_fields = ('id', 'balance')
 
     def get_balance(self, obj):
@@ -68,6 +68,17 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.proof.url)
 
             return None
+class WalletTransactionUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = WalletTransaction
+        fields = [
+            "amount",
+            "status",
+            "type",
+            "currency",
+            "reference",
+        ]
 class UserSerializer(serializers.ModelSerializer):
     balance = serializers.SerializerMethodField()
     class Meta:
