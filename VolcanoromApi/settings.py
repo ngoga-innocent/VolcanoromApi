@@ -77,22 +77,22 @@ CSRF_TRUSTED_ORIGINS = [
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'umuzylvc_volcanorom',
-        'USER': 'umuzylvc_admin',
-        'PASSWORD': 'Ngoga@1patrick',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'umuzylvc_volcanorom',
+#         'USER': 'umuzylvc_admin',
+#         'PASSWORD': 'Ngoga@1patrick',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=5)
